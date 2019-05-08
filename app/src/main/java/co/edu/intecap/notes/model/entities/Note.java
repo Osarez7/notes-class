@@ -1,4 +1,4 @@
-package co.edu.intecap.notes.model;
+package co.edu.intecap.notes.model.entities;
 
 
 import java.util.Date;

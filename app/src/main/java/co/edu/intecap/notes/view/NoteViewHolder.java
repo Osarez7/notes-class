@@ -13,6 +13,7 @@ class NoteViewHolder extends RecyclerView.ViewHolder {
     TextView txtName;
     TextView txtContent;
     TextView txtDate;
+    long noteId;
 
     public NoteViewHolder(@NonNull View itemView,@NonNull final NoteEventListener listener) {
         super(itemView);
@@ -25,7 +26,7 @@ class NoteViewHolder extends RecyclerView.ViewHolder {
         itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                listener.onNoteSelected(getAdapterPosition());
+                listener.onNoteSelected(noteId);
             }
         });
 

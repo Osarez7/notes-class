@@ -1,6 +1,5 @@
 package co.edu.intecap.notes.view;
 
-import android.provider.ContactsContract;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,7 +12,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import co.edu.intecap.notes.R;
 import co.edu.intecap.notes.listeners.NoteEventListener;
-import co.edu.intecap.notes.model.Note;
+import co.edu.intecap.notes.model.entities.Note;
 
 class NoteAdapter extends RecyclerView.Adapter<NoteViewHolder> {
 
@@ -28,6 +27,10 @@ class NoteAdapter extends RecyclerView.Adapter<NoteViewHolder> {
     }
 
 
+    public void setNoteList(List<Note> noteList) {
+        this.noteList = noteList;
+    }
+
     @NonNull
     @Override
     public NoteViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -38,6 +41,7 @@ class NoteAdapter extends RecyclerView.Adapter<NoteViewHolder> {
     @Override
     public void onBindViewHolder(@NonNull NoteViewHolder holder, int position) {
            Note note = noteList.get(position);
+           holder.noteId = note.getId();
            holder.txtName.setText(note.getName());
            holder.txtContent.setText(note.getContent());
            holder.txtDate.setText(simpleDateFormat.format(note.getCreatedDate()));

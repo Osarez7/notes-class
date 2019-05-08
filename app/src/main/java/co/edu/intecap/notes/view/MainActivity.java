@@ -6,12 +6,11 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import co.edu.intecap.notes.R;
 import co.edu.intecap.notes.listeners.NoteEventListener;
-import co.edu.intecap.notes.model.NoteRepository;
+import co.edu.intecap.notes.model.database.NotesDatabase;
 
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.Toast;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
@@ -23,6 +22,7 @@ public class MainActivity extends AppCompatActivity implements NoteEventListener
     private FloatingActionButton fabAddNote;
     private NoteAdapter adapter;
 
+    NotesDatabase notesDatabase;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -31,8 +31,13 @@ public class MainActivity extends AppCompatActivity implements NoteEventListener
         toolBar = findViewById(R.id.toolbar);
         setSupportActionBar(toolBar);
 
+
+        //estamos utlizando la base de datos desde  el activity
+        // en una app en produccion esta responsabilidad estaria en otro componente
+        notesDatabase = NotesDatabase.getInstance(getApplicationContext());
+
         rvNotes.setLayoutManager(new LinearLayoutManager(this));
-        adapter = new NoteAdapter(NoteRepository.NOTE_LIST, this);
+        adapter = new NoteAdapter(notesDatabase.noteDao().getAllNotes(), this);
         rvNotes.setAdapter(adapter);
 
         fabAddNote = findViewById(R.id.fab_add_note);
@@ -46,7 +51,7 @@ public class MainActivity extends AppCompatActivity implements NoteEventListener
     }
 
     @Override
-    public void onNoteSelected(int noteId) {
+    public void onNoteSelected(long noteId) {
         Intent intent =  NotesFormActivity.newIntent(this, noteId);
         startActivity(intent);
     }
@@ -54,7 +59,13 @@ public class MainActivity extends AppCompatActivity implements NoteEventListener
     @Override
     protected void onResume() {
         super.onResume();
+        adapter.setNoteList(notesDatabase.noteDao().getAllNotes());
         adapter.notifyDataSetChanged();
+    }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        NotesDatabase.destroyInstance();
     }
 }
