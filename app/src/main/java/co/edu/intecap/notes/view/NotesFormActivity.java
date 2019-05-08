@@ -7,9 +7,13 @@ import co.edu.intecap.notes.model.entities.Note;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.Switch;
 
 import com.google.android.material.textfield.TextInputLayout;
@@ -19,6 +23,7 @@ import java.util.Date;
 public class NotesFormActivity extends AppCompatActivity {
 
     public static final String EXTRA_NOTE_ID = "noteId";
+    private static final int REQUEST_IMAGE_CAPTURE = 120;
     private Button btnSave;
     private TextInputLayout inputName;
     private TextInputLayout inputContent;
@@ -26,6 +31,8 @@ public class NotesFormActivity extends AppCompatActivity {
     private int EMPTY_NOTE = -1;
     private long noteId = EMPTY_NOTE;
     private NotesDatabase notesDatabase;
+    private ImageButton ibAddImage;
+    private ImageView ivContent;
 
     public static Intent newIntent(Context context, long noteId) {
         Intent intent = new Intent(context, NotesFormActivity.class);
@@ -51,9 +58,19 @@ public class NotesFormActivity extends AppCompatActivity {
         inputName = findViewById(R.id.input_name);
         inputContent = findViewById(R.id.input_content);
         swFavorite = findViewById(R.id.sw_favorite);
+        ivContent = findViewById(R.id.iv_image_conent);
 
         setupNote();
 
+
+        ibAddImage = findViewById(R.id.ib_add_image);
+
+        ibAddImage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                takePhoto();
+            }
+        });
 
         btnSave.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -80,6 +97,8 @@ public class NotesFormActivity extends AppCompatActivity {
 
     }
 
+
+
     private void setupNote() {
         if( noteId != EMPTY_NOTE){
           Note note =  notesDatabase.noteDao().findNoteById(noteId);
@@ -88,6 +107,27 @@ public class NotesFormActivity extends AppCompatActivity {
               inputContent.getEditText().setText(note.getContent());
               swFavorite.setChecked(note.isFavorite());
           }
+        }
+    }
+
+
+
+
+
+    private void takePhoto() {
+        Intent takePhotoIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        if (takePhotoIntent.resolveActivity(getPackageManager()) != null) {
+            startActivityForResult(takePhotoIntent, REQUEST_IMAGE_CAPTURE);
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
+            Bundle extras = data.getExtras();
+            Bitmap imageBitmap = (Bitmap) extras.get("data");
+            ivContent.setImageBitmap(imageBitmap);
+            ivContent.setVisibility(View.VISIBLE);
         }
     }
 }
