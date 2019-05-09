@@ -1,24 +1,38 @@
 package co.edu.intecap.notes.view;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import androidx.core.content.FileProvider;
 import co.edu.intecap.notes.R;
 import co.edu.intecap.notes.model.database.NotesDatabase;
 import co.edu.intecap.notes.model.entities.Note;
+import co.edu.intecap.notes.utils.FileUtils;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.Switch;
+import android.widget.Toast;
 
 import com.google.android.material.textfield.TextInputLayout;
 
+import java.io.File;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
 
 public class NotesFormActivity extends AppCompatActivity {
 
@@ -30,9 +44,14 @@ public class NotesFormActivity extends AppCompatActivity {
     private Switch swFavorite;
     private int EMPTY_NOTE = -1;
     private long noteId = EMPTY_NOTE;
+
     private NotesDatabase notesDatabase;
     private ImageButton ibAddImage;
     private ImageView ivContent;
+    private String imageFilePath = "";
+
+    public static final int REQUEST_IMAGE = 100;
+    public static final int REQUEST_PERMISSION = 200;
 
     public static Intent newIntent(Context context, long noteId) {
         Intent intent = new Intent(context, NotesFormActivity.class);
@@ -63,12 +82,18 @@ public class NotesFormActivity extends AppCompatActivity {
         setupNote();
 
 
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) !=
+                PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[] {Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                    REQUEST_PERMISSION);
+        }
+
         ibAddImage = findViewById(R.id.ib_add_image);
 
         ibAddImage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                takePhoto();
+                openCameraIntent();
             }
         });
 
@@ -106,28 +131,59 @@ public class NotesFormActivity extends AppCompatActivity {
               inputName.getEditText().setText(note.getName());
               inputContent.getEditText().setText(note.getContent());
               swFavorite.setChecked(note.isFavorite());
+              imageFilePath = note.getImagePath();
           }
+
         }
     }
 
 
 
+    private void openCameraIntent() {
+        Intent pictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        if (pictureIntent.resolveActivity(getPackageManager()) != null) {
 
+            File photoFile = null;
+            try {
+//                photoFile = createImageFile();
+                photoFile = FileUtils.createImageFile(this);
+                imageFilePath = photoFile.getAbsolutePath();
+            }
+            catch (IOException e) {
+                e.printStackTrace();
+                return;
+            }
+            Uri photoUri = FileProvider.getUriForFile(this, getPackageName() +".provider", photoFile);
+            pictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoUri);
+            startActivityForResult(pictureIntent, REQUEST_IMAGE);
+        }
+    }
 
-    private void takePhoto() {
-        Intent takePhotoIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        if (takePhotoIntent.resolveActivity(getPackageManager()) != null) {
-            startActivityForResult(takePhotoIntent, REQUEST_IMAGE_CAPTURE);
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        if (requestCode == REQUEST_PERMISSION && grantResults.length > 0) {
+            if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(this, "Thanks for granting Permission", Toast.LENGTH_SHORT).show();
+            }
         }
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
-            Bundle extras = data.getExtras();
-            Bitmap imageBitmap = (Bitmap) extras.get("data");
-            ivContent.setImageBitmap(imageBitmap);
-            ivContent.setVisibility(View.VISIBLE);
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == REQUEST_IMAGE) {
+            if (resultCode == RESULT_OK) {
+                ivContent.setImageURI(Uri.parse(imageFilePath));
+                ivContent.setVisibility(View.VISIBLE);
+            }
+            else if (resultCode == RESULT_CANCELED) {
+                Toast.makeText(this, "You cancelled the operation", Toast.LENGTH_SHORT).show();
+            }
         }
     }
+
+
 }

@@ -13,6 +13,8 @@ public class Note {
     private String name;
     private String content;
     private boolean isFavorite;
+    private Date createdDate;
+    private String imagePath;
 
 
     public long getId() {
@@ -55,9 +57,12 @@ public class Note {
         this.createdDate = createdDate;
     }
 
-    private Date createdDate;
 
+    public String getImagePath() {
+        return imagePath;
+    }
 
-
-
+    public void setImagePath(String imagePath) {
+        this.imagePath = imagePath;
+    }
 }
