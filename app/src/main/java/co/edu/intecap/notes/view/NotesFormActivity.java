@@ -48,7 +48,7 @@ public class NotesFormActivity extends AppCompatActivity {
     private NotesDatabase notesDatabase;
     private ImageButton ibAddImage;
     private ImageView ivContent;
-    private String imageFilePath = "";
+    private String imageFilePath = null;
 
     public static final int REQUEST_IMAGE = 100;
     public static final int REQUEST_PERMISSION = 200;
@@ -57,7 +57,6 @@ public class NotesFormActivity extends AppCompatActivity {
         Intent intent = new Intent(context, NotesFormActivity.class);
         intent.putExtra(NotesFormActivity.EXTRA_NOTE_ID, noteId);
         return intent;
-
     }
 
     @Override
@@ -68,7 +67,6 @@ public class NotesFormActivity extends AppCompatActivity {
         if( intent != null ){
             noteId =  intent.getLongExtra(EXTRA_NOTE_ID, EMPTY_NOTE);
         }
-
 
         notesDatabase = NotesDatabase.getInstance(getApplicationContext());
 
@@ -106,20 +104,20 @@ public class NotesFormActivity extends AppCompatActivity {
                     note.setContent(inputContent.getEditText().getText().toString());
                     note.setFavorite(swFavorite.isChecked());
                     note.setCreatedDate(new Date());
+                    note.setImagePath(imageFilePath);
                      notesDatabase.noteDao().insertNote(note);
                 }else{
                     Note note = notesDatabase.noteDao().findNoteById(noteId);
                     note.setName(inputName.getEditText().getText().toString());
                     note.setContent(inputContent.getEditText().getText().toString());
                     note.setFavorite(swFavorite.isChecked());
+                    note.setImagePath(imageFilePath);
                     notesDatabase.noteDao().updateNote(note);
                 }
 
                 finish();
             }
         });
-
-
     }
 
 
@@ -132,6 +130,10 @@ public class NotesFormActivity extends AppCompatActivity {
               inputContent.getEditText().setText(note.getContent());
               swFavorite.setChecked(note.isFavorite());
               imageFilePath = note.getImagePath();
+              if(imageFilePath != null){
+                  ivContent.setImageURI(Uri.parse(imageFilePath));
+                  ivContent.setVisibility(View.VISIBLE);
+              }
           }
 
         }

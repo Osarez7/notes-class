@@ -1,5 +1,7 @@
 package co.edu.intecap.notes.view;
 
+import android.annotation.SuppressLint;
+import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,6 +20,7 @@ class NoteAdapter extends RecyclerView.Adapter<NoteViewHolder> {
 
     List<Note> noteList = new ArrayList();
 
+    @SuppressLint("SimpleDateFormat")
     SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
     private NoteEventListener listener;
 
@@ -45,6 +48,13 @@ class NoteAdapter extends RecyclerView.Adapter<NoteViewHolder> {
            holder.txtName.setText(note.getName());
            holder.txtContent.setText(note.getContent());
            holder.txtDate.setText(simpleDateFormat.format(note.getCreatedDate()));
+           if(note.getImagePath() != null && !note.getImagePath().isEmpty()){
+               holder.ivContent.setImageURI(Uri.parse(note.getImagePath()));
+               holder.ivContent.setVisibility(View.VISIBLE);
+           }else{
+               holder.ivContent.setImageBitmap(null);
+               holder.ivContent.setVisibility(View.GONE);
+           }
     }
 
     @Override
