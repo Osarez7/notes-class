@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">Notes</string>
     <string name="file_provider_authority">com.edu.intecap.notes.fileprovider</string>
+    <string name="action_share_label">Take a note</string>
 </resources>

@@ -19,6 +19,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
@@ -63,31 +64,65 @@ public class NotesFormActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_notes_form);
-        Intent intent =  getIntent();
-        if( intent != null ){
-            noteId =  intent.getLongExtra(EXTRA_NOTE_ID, EMPTY_NOTE);
+
+        setupUI();
+        checkPermissions();
+        setupEvents();
+
+        Intent intent = getIntent();
+
+        if (intent != null) {
+            noteId = intent.getLongExtra(EXTRA_NOTE_ID, EMPTY_NOTE);
+
+            if (noteId != EMPTY_NOTE) {
+                setupNote();
+            }
+
+            String action = intent.getAction();
+            if (Intent.ACTION_SEND.equals(action)) {
+
+                if (intent.getExtras().containsKey(Intent.EXTRA_TEXT)) {
+                    String text = intent.getExtras().getString(Intent.EXTRA_TEXT);
+                    inputContent.getEditText().setText(text);
+
+
+                }
+
+
+                if(intent.getExtras().containsKey(Intent.EXTRA_SUBJECT)){
+                    String subjet = intent.getExtras().getString(Intent.EXTRA_SUBJECT);
+                    inputName.getEditText().setText(subjet);
+                }
+
+                if(intent.getExtras().containsKey(Intent.EXTRA_STREAM)){
+                    Uri imageUri =  intent.getParcelableExtra(Intent.EXTRA_STREAM);
+                    ivContent.setImageURI(imageUri);
+                    ivContent.setVisibility(View.VISIBLE);
+                    imageFilePath = imageUri.getPath();
+
+                }
+
+                for (String s : intent.getExtras().keySet()) {
+                    Log.d("EXTRAS -> ", "onCreate: " + s );
+                }
+
+            }
+
         }
 
-        notesDatabase = NotesDatabase.getInstance(getApplicationContext());
 
-        btnSave = findViewById(R.id.btn_save);
+    }
 
-        inputName = findViewById(R.id.input_name);
-        inputContent = findViewById(R.id.input_content);
-        swFavorite = findViewById(R.id.sw_favorite);
-        ivContent = findViewById(R.id.iv_image_conent);
-
-        setupNote();
-
+    private void checkPermissions() {
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) !=
                 PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[] {Manifest.permission.WRITE_EXTERNAL_STORAGE},
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
                     REQUEST_PERMISSION);
         }
+    }
 
-        ibAddImage = findViewById(R.id.ib_add_image);
-
+    private void setupEvents() {
         ibAddImage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -98,15 +133,15 @@ public class NotesFormActivity extends AppCompatActivity {
         btnSave.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(noteId == EMPTY_NOTE){
+                if (noteId == EMPTY_NOTE) {
                     Note note = new Note();
                     note.setName(inputName.getEditText().getText().toString());
                     note.setContent(inputContent.getEditText().getText().toString());
                     note.setFavorite(swFavorite.isChecked());
                     note.setCreatedDate(new Date());
                     note.setImagePath(imageFilePath);
-                     notesDatabase.noteDao().insertNote(note);
-                }else{
+                    notesDatabase.noteDao().insertNote(note);
+                } else {
                     Note note = notesDatabase.noteDao().findNoteById(noteId);
                     note.setName(inputName.getEditText().getText().toString());
                     note.setContent(inputContent.getEditText().getText().toString());
@@ -120,25 +155,32 @@ public class NotesFormActivity extends AppCompatActivity {
         });
     }
 
+    private void setupUI() {
+        notesDatabase = NotesDatabase.getInstance(getApplicationContext());
+
+        btnSave = findViewById(R.id.btn_save);
+        ibAddImage = findViewById(R.id.ib_add_image);
+        inputName = findViewById(R.id.input_name);
+        inputContent = findViewById(R.id.input_content);
+        swFavorite = findViewById(R.id.sw_favorite);
+        ivContent = findViewById(R.id.iv_image_conent);
+    }
 
 
     private void setupNote() {
-        if( noteId != EMPTY_NOTE){
-          Note note =  notesDatabase.noteDao().findNoteById(noteId);
-          if(note != null){
-              inputName.getEditText().setText(note.getName());
-              inputContent.getEditText().setText(note.getContent());
-              swFavorite.setChecked(note.isFavorite());
-              imageFilePath = note.getImagePath();
-              if(imageFilePath != null){
-                  ivContent.setImageURI(Uri.parse(imageFilePath));
-                  ivContent.setVisibility(View.VISIBLE);
-              }
-          }
-
+        Note note = notesDatabase.noteDao().findNoteById(noteId);
+        if (note != null) {
+            inputName.getEditText().setText(note.getName());
+            inputContent.getEditText().setText(note.getContent());
+            swFavorite.setChecked(note.isFavorite());
+            imageFilePath = note.getImagePath();
+            if (imageFilePath != null) {
+                ivContent.setImageURI(Uri.parse(imageFilePath));
+                ivContent.setVisibility(View.VISIBLE);
+            }
         }
-    }
 
+    }
 
 
     private void openCameraIntent() {
@@ -150,12 +192,11 @@ public class NotesFormActivity extends AppCompatActivity {
 //                photoFile = createImageFile();
                 photoFile = FileUtils.createImageFile(this);
                 imageFilePath = photoFile.getAbsolutePath();
-            }
-            catch (IOException e) {
+            } catch (IOException e) {
                 e.printStackTrace();
                 return;
             }
-            Uri photoUri = FileProvider.getUriForFile(this, getPackageName() +".provider", photoFile);
+            Uri photoUri = FileProvider.getUriForFile(this, getPackageName() + ".provider", photoFile);
             pictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoUri);
             startActivityForResult(pictureIntent, REQUEST_IMAGE);
         }
@@ -180,8 +221,7 @@ public class NotesFormActivity extends AppCompatActivity {
             if (resultCode == RESULT_OK) {
                 ivContent.setImageURI(Uri.parse(imageFilePath));
                 ivContent.setVisibility(View.VISIBLE);
-            }
-            else if (resultCode == RESULT_CANCELED) {
+            } else if (resultCode == RESULT_CANCELED) {
                 Toast.makeText(this, "You cancelled the operation", Toast.LENGTH_SHORT).show();
             }
         }
