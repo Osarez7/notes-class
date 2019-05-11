@@ -1,4 +1,4 @@
-package co.edu.intecap.notes.view;
+package co.edu.intecap.notes.view.activities;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -6,14 +6,17 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import co.edu.intecap.notes.R;
 import co.edu.intecap.notes.listeners.NoteEventListener;
-import co.edu.intecap.notes.model.NoteRepository;
+import co.edu.intecap.notes.model.Note;
+import co.edu.intecap.notes.model.database.NotesDatabase;
+import co.edu.intecap.notes.view.NoteAdapter;
 
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.Toast;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+
+import java.util.ArrayList;
 
 
 public class MainActivity extends AppCompatActivity implements NoteEventListener {
@@ -22,6 +25,7 @@ public class MainActivity extends AppCompatActivity implements NoteEventListener
     Toolbar toolBar;
     private FloatingActionButton fabAddNote;
     private NoteAdapter adapter;
+    private NotesDatabase notesDatabase;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,22 +35,24 @@ public class MainActivity extends AppCompatActivity implements NoteEventListener
         toolBar = findViewById(R.id.toolbar);
         setSupportActionBar(toolBar);
 
+        notesDatabase = NotesDatabase.getInstance(this);
+
         rvNotes.setLayoutManager(new LinearLayoutManager(this));
-        adapter = new NoteAdapter(NoteRepository.NOTE_LIST, this);
+        adapter = new NoteAdapter(new ArrayList<Note>(), this);
         rvNotes.setAdapter(adapter);
 
         fabAddNote = findViewById(R.id.fab_add_note);
         fabAddNote.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(MainActivity.this,NotesFormActivity.class);
+                Intent intent = new Intent(MainActivity.this, NotesFormActivity.class);
                 startActivity(intent);
             }
         });
     }
 
     @Override
-    public void onNoteSelected(int noteId) {
+    public void onNoteSelected(long noteId) {
         Intent intent =  NotesFormActivity.newIntent(this, noteId);
         startActivity(intent);
     }
@@ -54,7 +60,7 @@ public class MainActivity extends AppCompatActivity implements NoteEventListener
     @Override
     protected void onResume() {
         super.onResume();
+        adapter.setNoteList(notesDatabase.noteDao().findAllNotes());
         adapter.notifyDataSetChanged();
-
     }
 }

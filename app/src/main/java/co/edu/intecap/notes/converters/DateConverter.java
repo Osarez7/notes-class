@@ -1,0 +1,19 @@
+package co.edu.intecap.notes.converters;
+
+import java.util.Date;
+
+import androidx.room.TypeConverter;
+
+public class DateConverter {
+
+    @TypeConverter
+    public Long toTime(Date date){
+        return date == null ? null : date.getTime();
+    }
+
+    @TypeConverter
+    public Date toDate(Long time){
+        return time == null ? null : new Date(time);
+    }
+
+}
