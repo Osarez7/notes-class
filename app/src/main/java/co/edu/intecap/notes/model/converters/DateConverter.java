@@ -1,4 +1,4 @@
-package co.edu.intecap.notes.converters;
+package co.edu.intecap.notes.model.converters;
 
 import java.util.Date;
 

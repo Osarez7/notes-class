@@ -5,34 +5,33 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import co.edu.intecap.notes.R;
-import co.edu.intecap.notes.listeners.NoteEventListener;
-import co.edu.intecap.notes.model.Note;
+import co.edu.intecap.notes.network.model.Note;
+import co.edu.intecap.notes.view.listeners.NoteEventListener;
 
 public class NoteAdapter extends RecyclerView.Adapter<NoteViewHolder> {
 
-    List<Note> noteList = new ArrayList();
+    private HashMap<String, Note> noteMap;
 
-    SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+    private SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault());
     private NoteEventListener listener;
 
-    public NoteAdapter(List<Note> noteList,@NonNull NoteEventListener listener) {
-        this.noteList = noteList;
+    public NoteAdapter(@NonNull NoteEventListener listener) {
         this.listener = listener;
     }
 
-
-    public List<Note> getNoteList() {
-        return noteList;
+    public HashMap<String, Note> getNoteMap() {
+        return noteMap;
     }
 
-    public void setNoteList(List<Note> noteList) {
-        this.noteList = noteList;
+    public void setNoteMap(HashMap<String, Note> noteMap) {
+        this.noteMap = noteMap;
     }
 
     @NonNull
@@ -44,15 +43,19 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteViewHolder> {
 
     @Override
     public void onBindViewHolder(@NonNull NoteViewHolder holder, int position) {
-           Note note = noteList.get(position);
-           holder.noteId = note.getId();
-           holder.txtName.setText(note.getName());
-           holder.txtContent.setText(note.getContent());
-           holder.txtDate.setText(simpleDateFormat.format(note.getCreatedDate()));
+        Note note = noteMap.get(noteMap.keySet().toArray()[position]);
+        holder.noteId = noteMap.keySet().toArray()[position].toString();
+        holder.txtName.setText(note.getName());
+        holder.txtContent.setText(note.getContent());
+//        holder.txtDate.setText(simpleDateFormat.format(note.getCreatedDate()));
     }
 
     @Override
     public int getItemCount() {
-        return noteList.size();
+        if (noteMap == null) {
+            return 0;
+        } else {
+            return noteMap.keySet().size();
+        }
     }
 }

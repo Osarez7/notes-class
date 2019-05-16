@@ -1,26 +1,25 @@
-package co.edu.intecap.notes.model;
+package co.edu.intecap.notes.network.model;
 
-
+import com.google.gson.annotations.SerializedName;
 import java.util.Date;
 
-import androidx.room.Entity;
-import androidx.room.PrimaryKey;
+import androidx.room.Ignore;
 
-@Entity(tableName = "note")
 public class Note {
-
-    @PrimaryKey(autoGenerate = true)
-    private long id;
+    private String id;
     private String name;
     private String content;
+    @SerializedName("is_favorite")
     private boolean isFavorite;
+    @Ignore
     private Date createdDate;
 
-    public long getId() {
+
+    public String getId() {
         return id;
     }
 
-    public void setId(long id) {
+    public void setId(String id) {
         this.id = id;
     }
 
@@ -55,10 +54,4 @@ public class Note {
     public void setCreatedDate(Date createdDate) {
         this.createdDate = createdDate;
     }
-
-
-
-
-
-
 }

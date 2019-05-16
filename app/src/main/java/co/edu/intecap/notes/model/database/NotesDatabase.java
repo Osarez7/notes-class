@@ -6,11 +6,11 @@ import androidx.room.Database;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
 import androidx.room.TypeConverters;
-import co.edu.intecap.notes.converters.DateConverter;
-import co.edu.intecap.notes.model.Note;
+import co.edu.intecap.notes.model.converters.DateConverter;
+import co.edu.intecap.notes.model.NoteEntity;
 import co.edu.intecap.notes.model.daos.NoteDao;
 
-@Database(entities = {Note.class}, version = 2, exportSchema = false)
+@Database(entities = {NoteEntity.class}, version = 2, exportSchema = false)
 @TypeConverters({DateConverter.class})
 public  abstract class NotesDatabase extends RoomDatabase {
 
