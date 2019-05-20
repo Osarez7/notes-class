@@ -5,17 +5,27 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import co.edu.intecap.notes.R;
+import co.edu.intecap.notes.api.Note;
+import co.edu.intecap.notes.api.NoteResponse;
+import co.edu.intecap.notes.api.NotesApi;
+import co.edu.intecap.notes.api.NotesApiClient;
 import co.edu.intecap.notes.listeners.NoteEventListener;
 import co.edu.intecap.notes.model.database.NotesDatabase;
 import co.edu.intecap.notes.model.entities.NoteEntity;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 
 public class MainActivity extends AppCompatActivity implements NoteEventListener {
@@ -25,7 +35,8 @@ public class MainActivity extends AppCompatActivity implements NoteEventListener
     private FloatingActionButton fabAddNote;
     private NoteAdapter adapter;
 
-    NotesDatabase notesDatabase;
+    private NotesApi notesApi;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -35,12 +46,10 @@ public class MainActivity extends AppCompatActivity implements NoteEventListener
         setSupportActionBar(toolBar);
 
 
-        //estamos utlizando la base de datos desde  el activity
-        // en una app en produccion esta responsabilidad estaria en otro componente
-        notesDatabase = NotesDatabase.getInstance(getApplicationContext());
+        notesApi = NotesApiClient.getClient().create(NotesApi.class);
 
         rvNotes.setLayoutManager(new LinearLayoutManager(this));
-        adapter = new NoteAdapter(notesDatabase.noteDao().getAllNotes(), this);
+        adapter = new NoteAdapter(new ArrayList<Note>(), this);
         rvNotes.setAdapter(adapter);
 
         fabAddNote = findViewById(R.id.fab_add_note);
@@ -61,18 +70,20 @@ public class MainActivity extends AppCompatActivity implements NoteEventListener
 
     @Override
     public void onDeleteNote(long noteId) {
-        NoteEntity noteEntity = notesDatabase.noteDao().findNoteById(noteId);
-        deleteImage(noteEntity.getImagePath());
-        notesDatabase.noteDao().deleteNote(noteEntity);
-        updateNotes();
+        notesApi.delteNote(noteId).enqueue(new Callback<NoteResponse>() {
+            @Override
+            public void onResponse(Call<NoteResponse> call, Response<NoteResponse> response) {
+                updateNotes();
+            }
+
+            @Override
+            public void onFailure(Call<NoteResponse> call, Throwable t) {
+
+            }
+        });
+
     }
 
-    private void deleteImage(String imagePath) {
-        if(imagePath != null && !imagePath.isEmpty()){
-            File file = new File(imagePath);
-            file.delete();
-        }
-    }
 
     @Override
     protected void onResume() {
@@ -81,8 +92,18 @@ public class MainActivity extends AppCompatActivity implements NoteEventListener
     }
 
     private void updateNotes() {
-        adapter.setNoteEntityList(notesDatabase.noteDao().getAllNotes());
-        adapter.notifyDataSetChanged();
+        notesApi.getNotes().enqueue(new Callback<List<Note>>() {
+            @Override
+            public void onResponse(Call<List<Note>> call, Response<List<Note>> response) {
+                adapter.setNoteEntityList(response.body());
+                adapter.notifyDataSetChanged();
+            }
+
+            @Override
+            public void onFailure(Call<List<Note>> call, Throwable t) {
+                Log.e("Note", "getNotes onFailure: ", t);
+            }
+        });
     }
 
 

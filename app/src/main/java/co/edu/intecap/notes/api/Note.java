@@ -2,14 +2,18 @@ package co.edu.intecap.notes.api;
 
 import com.google.gson.annotations.SerializedName;
 
+import java.util.Date;
+
 public class Note {
     @SerializedName("_id")
     private int id;
     private String name;
     private String content;
+    @SerializedName("image_url")
     private String imageUrl;
     @SerializedName("is_favorite")
     private boolean isFavorite;
+//    private Date createdDate;
 
     public int getId() {
         return id;
@@ -50,4 +54,5 @@ public class Note {
     public void setFavorite(boolean favorite) {
         isFavorite = favorite;
     }
+
 }

@@ -19,12 +19,12 @@ public interface NotesApi{
 
     //Consultar una nota
     @GET("/api/notes/{id}")
-    public Call<Note> updateNote(@Path("id") long id) ;
+    public Call<Note> getNote(@Path("id") long id) ;
 
 
     //Consultar todas las notas
     @GET("/api/notes")
-    public Call<List<Note>> getNotes(@Path("id") long id) ;
+    public Call<List<Note>> getNotes() ;
 
     //Actualizar una nota
     @PUT("/api/notes/{id}")

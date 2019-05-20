@@ -4,9 +4,13 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.FileProvider;
 import co.edu.intecap.notes.R;
-import co.edu.intecap.notes.model.database.NotesDatabase;
-import co.edu.intecap.notes.model.entities.NoteEntity;
+import co.edu.intecap.notes.api.Note;
+import co.edu.intecap.notes.api.NotesApi;
+import co.edu.intecap.notes.api.NotesApiClient;
 import co.edu.intecap.notes.utils.FileUtils;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 import android.content.Context;
 import android.content.Intent;
@@ -14,6 +18,7 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
@@ -41,10 +46,10 @@ public class NotesFormActivity extends AppCompatActivity {
     private int EMPTY_NOTE = -1;
     private long noteId = EMPTY_NOTE;
 
-    private NotesDatabase notesDatabase;
     private ImageButton ibAddImage;
     private ImageView ivContent;
     private String imageFilePath = null;
+    private NotesApi notesApi;
 
 
     public static Intent newIntent(Context context, long noteId) {
@@ -57,7 +62,7 @@ public class NotesFormActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_notes_form);
-
+        notesApi = NotesApiClient.getClient().create(NotesApi.class);
         setupUI();
         setupEvents();
         processIntent(getIntent());
@@ -109,20 +114,51 @@ public class NotesFormActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 if (noteId == EMPTY_NOTE) {
-                    NoteEntity noteEntity = new NoteEntity();
-                    noteEntity.setName(inputName.getEditText().getText().toString());
-                    noteEntity.setContent(inputContent.getEditText().getText().toString());
-                    noteEntity.setFavorite(swFavorite.isChecked());
-                    noteEntity.setCreatedDate(new Date());
-                    noteEntity.setImagePath(imageFilePath);
-                    notesDatabase.noteDao().insertNote(noteEntity);
+                    Note note = new Note();
+                    note.setName(inputName.getEditText().getText().toString());
+                    note.setContent(inputContent.getEditText().getText().toString());
+                    note.setFavorite(swFavorite.isChecked());
+                    note.setImageUrl(imageFilePath);
+                    notesApi.addNote(note).enqueue(new Callback<Note>() {
+                        @Override
+                        public void onResponse(Call<Note> call, Response<Note> response) {
+                            Log.d("Note", "onResponse: Note added");
+                        }
+
+                        @Override
+                        public void onFailure(Call<Note> call, Throwable t) {
+
+                        }
+                    });
                 } else {
-                    NoteEntity noteEntity = notesDatabase.noteDao().findNoteById(noteId);
-                    noteEntity.setName(inputName.getEditText().getText().toString());
-                    noteEntity.setContent(inputContent.getEditText().getText().toString());
-                    noteEntity.setFavorite(swFavorite.isChecked());
-                    noteEntity.setImagePath(imageFilePath);
-                    notesDatabase.noteDao().updateNote(noteEntity);
+                    notesApi.getNote(noteId).enqueue(new Callback<Note>() {
+                        @Override
+                        public void onResponse(Call<Note> call, Response<Note> response) {
+
+                            Note note = response.body();
+                            note.setName(inputName.getEditText().getText().toString());
+                            note.setContent(inputContent.getEditText().getText().toString());
+                            note.setFavorite(swFavorite.isChecked());
+                            note.setImageUrl(imageFilePath);
+                            notesApi.updateNote(note, noteId).enqueue(new Callback<Note>() {
+                                @Override
+                                public void onResponse(Call<Note> call, Response<Note> response) {
+                                    Log.d("Note", "onResponse: Note updated");
+                                }
+
+                                @Override
+                                public void onFailure(Call<Note> call, Throwable t) {
+
+                                }
+                            });
+                        }
+
+                        @Override
+                        public void onFailure(Call<Note> call, Throwable t) {
+
+                        }
+                    });
+
                 }
 
                 finish();
@@ -131,7 +167,7 @@ public class NotesFormActivity extends AppCompatActivity {
     }
 
     private void setupUI() {
-        notesDatabase = NotesDatabase.getInstance(getApplicationContext());
+
 
         btnSave = findViewById(R.id.btn_save);
         ibAddImage = findViewById(R.id.ib_add_image);
@@ -143,18 +179,29 @@ public class NotesFormActivity extends AppCompatActivity {
 
 
     private void setupNote() {
-        NoteEntity noteEntity = notesDatabase.noteDao().findNoteById(noteId);
-        if (noteEntity != null) {
-            inputName.getEditText().setText(noteEntity.getName());
-            inputContent.getEditText().setText(noteEntity.getContent());
-            swFavorite.setChecked(noteEntity.isFavorite());
-            imageFilePath = noteEntity.getImagePath();
+        notesApi.getNote(noteId).enqueue(new Callback<Note>() {
+            @Override
+            public void onResponse(Call<Note> call, Response<Note> response) {
+                 Note note = response.body();
+                if (note != null) {
+                    inputName.getEditText().setText(note.getName());
+                    inputContent.getEditText().setText(note.getContent());
+                    swFavorite.setChecked(note.isFavorite());
+                    note.getImageUrl();
 
-            if (imageFilePath != null) {
-                ivContent.setImageURI(Uri.parse(imageFilePath));
-                ivContent.setVisibility(View.VISIBLE);
+                    if (imageFilePath != null) {
+                        ivContent.setImageURI(Uri.parse(imageFilePath));
+                        ivContent.setVisibility(View.VISIBLE);
+                    }
+                }
             }
-        }
+
+            @Override
+            public void onFailure(Call<Note> call, Throwable t) {
+
+            }
+        });
+
 
     }
 
@@ -200,6 +247,5 @@ public class NotesFormActivity extends AppCompatActivity {
             }
         }
     }
-
 
 }

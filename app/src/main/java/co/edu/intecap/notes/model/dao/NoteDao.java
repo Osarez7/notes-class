@@ -12,10 +12,10 @@ import co.edu.intecap.notes.model.entities.NoteEntity;
 
 @Dao
 public interface NoteDao {
-    @Query("SELECT * FROM NoteEntity")
+    @Query("SELECT * FROM note")
     public List<NoteEntity> getAllNotes();
 
-    @Query("SELECT * FROM NoteEntity where NoteEntity.id = :noteId")
+    @Query("SELECT * FROM note where id = :noteId")
     public NoteEntity findNoteById(long noteId);
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
