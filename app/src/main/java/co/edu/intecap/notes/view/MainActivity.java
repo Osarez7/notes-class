@@ -78,7 +78,7 @@ public class MainActivity extends AppCompatActivity implements NoteEventListener
 
             @Override
             public void onFailure(Call<NoteResponse> call, Throwable t) {
-
+                Log.e("Note", "onFailure: ",  t);
             }
         });
 
