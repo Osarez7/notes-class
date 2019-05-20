@@ -1,6 +1,7 @@
 package co.edu.intecap.notes.view;
 
 import android.view.View;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -15,6 +16,7 @@ class NoteViewHolder extends RecyclerView.ViewHolder {
     TextView txtContent;
     TextView txtDate;
     ImageView ivContent;
+    ImageButton ibDeleteNote;
     long noteId;
 
     public NoteViewHolder(@NonNull View itemView,@NonNull final NoteEventListener listener) {
@@ -25,11 +27,18 @@ class NoteViewHolder extends RecyclerView.ViewHolder {
         txtContent = itemView.findViewById(R.id.txt_content);
         txtDate = itemView.findViewById(R.id.txt_date);
         ivContent = itemView.findViewById(R.id.iv_image_conent);
+        ibDeleteNote = itemView.findViewById(R.id.ib_delete_note);
 
         itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 listener.onNoteSelected(noteId);
+            }
+        });
+        ibDeleteNote.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                listener.onDeleteNote(noteId);
             }
         });
 

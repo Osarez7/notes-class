@@ -7,12 +7,15 @@ import androidx.recyclerview.widget.RecyclerView;
 import co.edu.intecap.notes.R;
 import co.edu.intecap.notes.listeners.NoteEventListener;
 import co.edu.intecap.notes.model.database.NotesDatabase;
+import co.edu.intecap.notes.model.entities.Note;
 
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+
+import java.io.File;
 
 
 public class MainActivity extends AppCompatActivity implements NoteEventListener {
@@ -57,11 +60,31 @@ public class MainActivity extends AppCompatActivity implements NoteEventListener
     }
 
     @Override
+    public void onDeleteNote(long noteId) {
+        Note note = notesDatabase.noteDao().findNoteById(noteId);
+        deleteImage(note.getImagePath());
+        notesDatabase.noteDao().deleteNote(note);
+        updateNotes();
+    }
+
+    private void deleteImage(String imagePath) {
+        if(imagePath != null && !imagePath.isEmpty()){
+            File file = new File(imagePath);
+            file.delete();
+        }
+    }
+
+    @Override
     protected void onResume() {
         super.onResume();
+        updateNotes();
+    }
+
+    private void updateNotes() {
         adapter.setNoteList(notesDatabase.noteDao().getAllNotes());
         adapter.notifyDataSetChanged();
     }
+
 
     @Override
     protected void onDestroy() {
