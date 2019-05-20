@@ -2,24 +2,18 @@ package co.edu.intecap.notes.view;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 import co.edu.intecap.notes.R;
 import co.edu.intecap.notes.model.database.NotesDatabase;
-import co.edu.intecap.notes.model.entities.Note;
+import co.edu.intecap.notes.model.entities.NoteEntity;
 import co.edu.intecap.notes.utils.FileUtils;
 
-import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
 import android.provider.MediaStore;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
@@ -31,9 +25,7 @@ import com.google.android.material.textfield.TextInputLayout;
 
 import java.io.File;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Locale;
 
 public class NotesFormActivity extends AppCompatActivity {
 
@@ -117,20 +109,20 @@ public class NotesFormActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 if (noteId == EMPTY_NOTE) {
-                    Note note = new Note();
-                    note.setName(inputName.getEditText().getText().toString());
-                    note.setContent(inputContent.getEditText().getText().toString());
-                    note.setFavorite(swFavorite.isChecked());
-                    note.setCreatedDate(new Date());
-                    note.setImagePath(imageFilePath);
-                    notesDatabase.noteDao().insertNote(note);
+                    NoteEntity noteEntity = new NoteEntity();
+                    noteEntity.setName(inputName.getEditText().getText().toString());
+                    noteEntity.setContent(inputContent.getEditText().getText().toString());
+                    noteEntity.setFavorite(swFavorite.isChecked());
+                    noteEntity.setCreatedDate(new Date());
+                    noteEntity.setImagePath(imageFilePath);
+                    notesDatabase.noteDao().insertNote(noteEntity);
                 } else {
-                    Note note = notesDatabase.noteDao().findNoteById(noteId);
-                    note.setName(inputName.getEditText().getText().toString());
-                    note.setContent(inputContent.getEditText().getText().toString());
-                    note.setFavorite(swFavorite.isChecked());
-                    note.setImagePath(imageFilePath);
-                    notesDatabase.noteDao().updateNote(note);
+                    NoteEntity noteEntity = notesDatabase.noteDao().findNoteById(noteId);
+                    noteEntity.setName(inputName.getEditText().getText().toString());
+                    noteEntity.setContent(inputContent.getEditText().getText().toString());
+                    noteEntity.setFavorite(swFavorite.isChecked());
+                    noteEntity.setImagePath(imageFilePath);
+                    notesDatabase.noteDao().updateNote(noteEntity);
                 }
 
                 finish();
@@ -151,12 +143,12 @@ public class NotesFormActivity extends AppCompatActivity {
 
 
     private void setupNote() {
-        Note note = notesDatabase.noteDao().findNoteById(noteId);
-        if (note != null) {
-            inputName.getEditText().setText(note.getName());
-            inputContent.getEditText().setText(note.getContent());
-            swFavorite.setChecked(note.isFavorite());
-            imageFilePath = note.getImagePath();
+        NoteEntity noteEntity = notesDatabase.noteDao().findNoteById(noteId);
+        if (noteEntity != null) {
+            inputName.getEditText().setText(noteEntity.getName());
+            inputContent.getEditText().setText(noteEntity.getContent());
+            swFavorite.setChecked(noteEntity.isFavorite());
+            imageFilePath = noteEntity.getImagePath();
 
             if (imageFilePath != null) {
                 ivContent.setImageURI(Uri.parse(imageFilePath));

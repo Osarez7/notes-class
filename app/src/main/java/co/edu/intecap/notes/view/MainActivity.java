@@ -7,7 +7,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import co.edu.intecap.notes.R;
 import co.edu.intecap.notes.listeners.NoteEventListener;
 import co.edu.intecap.notes.model.database.NotesDatabase;
-import co.edu.intecap.notes.model.entities.Note;
+import co.edu.intecap.notes.model.entities.NoteEntity;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -61,9 +61,9 @@ public class MainActivity extends AppCompatActivity implements NoteEventListener
 
     @Override
     public void onDeleteNote(long noteId) {
-        Note note = notesDatabase.noteDao().findNoteById(noteId);
-        deleteImage(note.getImagePath());
-        notesDatabase.noteDao().deleteNote(note);
+        NoteEntity noteEntity = notesDatabase.noteDao().findNoteById(noteId);
+        deleteImage(noteEntity.getImagePath());
+        notesDatabase.noteDao().deleteNote(noteEntity);
         updateNotes();
     }
 
@@ -81,7 +81,7 @@ public class MainActivity extends AppCompatActivity implements NoteEventListener
     }
 
     private void updateNotes() {
-        adapter.setNoteList(notesDatabase.noteDao().getAllNotes());
+        adapter.setNoteEntityList(notesDatabase.noteDao().getAllNotes());
         adapter.notifyDataSetChanged();
     }
 

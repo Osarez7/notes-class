@@ -8,22 +8,22 @@ import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 import androidx.room.Update;
-import co.edu.intecap.notes.model.entities.Note;
+import co.edu.intecap.notes.model.entities.NoteEntity;
 
 @Dao
 public interface NoteDao {
-    @Query("SELECT * FROM note")
-    public List<Note> getAllNotes();
+    @Query("SELECT * FROM NoteEntity")
+    public List<NoteEntity> getAllNotes();
 
-    @Query("SELECT * FROM note where note.id = :noteId")
-    public Note findNoteById(long noteId);
+    @Query("SELECT * FROM NoteEntity where NoteEntity.id = :noteId")
+    public NoteEntity findNoteById(long noteId);
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    public void insertNote(Note note);
+    public void insertNote(NoteEntity noteEntity);
 
     @Update
-    public void updateNote(Note note);
+    public void updateNote(NoteEntity noteEntity);
 
     @Delete
-    public void deleteNote(Note note);
+    public void deleteNote(NoteEntity noteEntity);
 }

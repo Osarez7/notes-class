@@ -7,7 +7,7 @@ import androidx.room.Entity;
 import androidx.room.PrimaryKey;
 
 @Entity(tableName = "note")
-public class Note {
+public class NoteEntity {
     @PrimaryKey(autoGenerate = true)
     private long id;
     private String name;
