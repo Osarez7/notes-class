@@ -38,7 +38,10 @@ import java.util.Locale;
 public class NotesFormActivity extends AppCompatActivity {
 
     public static final String EXTRA_NOTE_ID = "noteId";
+
     private static final int REQUEST_IMAGE_CAPTURE = 120;
+    public static final int REQUEST_PERMISSION = 200;
+
     private Button btnSave;
     private TextInputLayout inputName;
     private TextInputLayout inputContent;
@@ -51,8 +54,6 @@ public class NotesFormActivity extends AppCompatActivity {
     private ImageView ivContent;
     private String imageFilePath = null;
 
-    public static final int REQUEST_IMAGE = 100;
-    public static final int REQUEST_PERMISSION = 200;
 
     public static Intent newIntent(Context context, long noteId) {
         Intent intent = new Intent(context, NotesFormActivity.class);
@@ -66,14 +67,15 @@ public class NotesFormActivity extends AppCompatActivity {
         setContentView(R.layout.activity_notes_form);
 
         setupUI();
-        checkPermissions();
         setupEvents();
+        processIntent(getIntent());
 
-        Intent intent = getIntent();
+    }
+
+    private void processIntent(Intent intent) {
 
         if (intent != null) {
             noteId = intent.getLongExtra(EXTRA_NOTE_ID, EMPTY_NOTE);
-
             if (noteId != EMPTY_NOTE) {
                 setupNote();
             }
@@ -84,43 +86,24 @@ public class NotesFormActivity extends AppCompatActivity {
                 if (intent.getExtras().containsKey(Intent.EXTRA_TEXT)) {
                     String text = intent.getExtras().getString(Intent.EXTRA_TEXT);
                     inputContent.getEditText().setText(text);
-
-
                 }
 
-
-                if(intent.getExtras().containsKey(Intent.EXTRA_SUBJECT)){
+                if (intent.getExtras().containsKey(Intent.EXTRA_SUBJECT)) {
                     String subjet = intent.getExtras().getString(Intent.EXTRA_SUBJECT);
                     inputName.getEditText().setText(subjet);
                 }
 
-                if(intent.getExtras().containsKey(Intent.EXTRA_STREAM)){
-                    Uri imageUri =  intent.getParcelableExtra(Intent.EXTRA_STREAM);
+                if (intent.getExtras().containsKey(Intent.EXTRA_STREAM)) {
+                    Uri imageUri = intent.getParcelableExtra(Intent.EXTRA_STREAM);
                     ivContent.setImageURI(imageUri);
                     ivContent.setVisibility(View.VISIBLE);
-                    imageFilePath = imageUri.getPath();
-
-                }
-
-                for (String s : intent.getExtras().keySet()) {
-                    Log.d("EXTRAS -> ", "onCreate: " + s );
+                    imageFilePath = FileUtils.createFileFromUri(this, imageUri).getAbsolutePath();
                 }
 
             }
-
-        }
-
-
-    }
-
-    private void checkPermissions() {
-
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) !=
-                PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                    REQUEST_PERMISSION);
         }
     }
+
 
     private void setupEvents() {
         ibAddImage.setOnClickListener(new View.OnClickListener() {
@@ -174,6 +157,7 @@ public class NotesFormActivity extends AppCompatActivity {
             inputContent.getEditText().setText(note.getContent());
             swFavorite.setChecked(note.isFavorite());
             imageFilePath = note.getImagePath();
+
             if (imageFilePath != null) {
                 ivContent.setImageURI(Uri.parse(imageFilePath));
                 ivContent.setVisibility(View.VISIBLE);
@@ -186,10 +170,8 @@ public class NotesFormActivity extends AppCompatActivity {
     private void openCameraIntent() {
         Intent pictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         if (pictureIntent.resolveActivity(getPackageManager()) != null) {
-
             File photoFile = null;
             try {
-//                photoFile = createImageFile();
                 photoFile = FileUtils.createImageFile(this);
                 imageFilePath = photoFile.getAbsolutePath();
             } catch (IOException e) {
@@ -198,7 +180,7 @@ public class NotesFormActivity extends AppCompatActivity {
             }
             Uri photoUri = FileProvider.getUriForFile(this, getPackageName() + ".provider", photoFile);
             pictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoUri);
-            startActivityForResult(pictureIntent, REQUEST_IMAGE);
+            startActivityForResult(pictureIntent, REQUEST_IMAGE_CAPTURE);
         }
     }
 
@@ -217,7 +199,7 @@ public class NotesFormActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if (requestCode == REQUEST_IMAGE) {
+        if (requestCode == REQUEST_IMAGE_CAPTURE) {
             if (resultCode == RESULT_OK) {
                 ivContent.setImageURI(Uri.parse(imageFilePath));
                 ivContent.setVisibility(View.VISIBLE);
