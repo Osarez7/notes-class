@@ -9,7 +9,7 @@ public class Note {
     private int id;
     private String name;
     private String content;
-    @SerializedName("is_favorite")
+    @SerializedName("image_url")
     private String imageUrl;
     @SerializedName("is_favorite")
     private boolean isFavorite;

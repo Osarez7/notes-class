@@ -2,6 +2,7 @@ package co.edu.intecap.notes.api;
 
 public class NoteResponse {
     private String status;
+    private String result;
 
     public String getStatus() {
         return status;
@@ -9,5 +10,13 @@ public class NoteResponse {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public String getResult() {
+        return result;
+    }
+
+    public void setResult(String result) {
+        this.result = result;
     }
 }

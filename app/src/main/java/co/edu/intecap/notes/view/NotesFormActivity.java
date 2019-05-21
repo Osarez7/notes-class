@@ -5,9 +5,13 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.FileProvider;
 import co.edu.intecap.notes.R;
 import co.edu.intecap.notes.api.Note;
+import co.edu.intecap.notes.api.NoteResponse;
 import co.edu.intecap.notes.api.NotesApi;
 import co.edu.intecap.notes.api.NotesApiClient;
 import co.edu.intecap.notes.utils.FileUtils;
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -26,6 +30,7 @@ import android.widget.ImageView;
 import android.widget.Switch;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
 import com.google.android.material.textfield.TextInputLayout;
 
 import java.io.File;
@@ -114,22 +119,48 @@ public class NotesFormActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 if (noteId == EMPTY_NOTE) {
-                    Note note = new Note();
+                    final Note note = new Note();
                     note.setName(inputName.getEditText().getText().toString());
                     note.setContent(inputContent.getEditText().getText().toString());
                     note.setFavorite(swFavorite.isChecked());
-                    note.setImageUrl(imageFilePath);
-                    notesApi.addNote(note).enqueue(new Callback<Note>() {
+
+                    File file = new File(imageFilePath);
+                    Log.d("Note", "Filename " + file.getName());
+                    //RequestBody mFile = RequestBody.create(MediaType.parse("multipart/form-data"), file);
+                    RequestBody mFile = RequestBody.create(MediaType.parse("image/*"), file);
+                    MultipartBody.Part fileToUpload = MultipartBody.Part.createFormData("file", file.getName(), mFile);
+                    RequestBody filename = RequestBody.create(MediaType.parse("text/plain"), file.getName());
+
+
+                    if(imageFilePath == null || imageFilePath.isEmpty()) return;
+
+                    notesApi.uploadFile(fileToUpload, filename).enqueue(new Callback<NoteResponse>() {
                         @Override
-                        public void onResponse(Call<Note> call, Response<Note> response) {
-                            Log.d("Note", "onResponse: Note added");
+                        public void onResponse(Call<NoteResponse> call, Response<NoteResponse> response) {
+                            Log.d("Note", "uploadFile: " + response.body().getStatus());
+                            note.setImageUrl(response.body().getStatus());
+                            notesApi.addNote(note).enqueue(new Callback<Note>() {
+                                @Override
+                                public void onResponse(Call<Note> call, Response<Note> response) {
+                                    Log.d("Note", "onResponse: Note added");
+                                    finish();
+                                }
+
+                                @Override
+                                public void onFailure(Call<Note> call, Throwable t) {
+                                    finish();
+                                }
+                            });
                         }
 
                         @Override
-                        public void onFailure(Call<Note> call, Throwable t) {
-
+                        public void onFailure(Call<NoteResponse> call, Throwable t) {
+                            Log.e("Note", "onFailure: " , t);
+                            finish();
                         }
                     });
+
+
                 } else {
                     notesApi.getNote(noteId).enqueue(new Callback<Note>() {
                         @Override
@@ -161,7 +192,7 @@ public class NotesFormActivity extends AppCompatActivity {
 
                 }
 
-                finish();
+
             }
         });
     }
@@ -187,10 +218,14 @@ public class NotesFormActivity extends AppCompatActivity {
                     inputName.getEditText().setText(note.getName());
                     inputContent.getEditText().setText(note.getContent());
                     swFavorite.setChecked(note.isFavorite());
-                    note.getImageUrl();
+                    Log.d("IMAGE", "image url: " + note.getImageUrl() );
 
-                    if (imageFilePath != null) {
-                        ivContent.setImageURI(Uri.parse(imageFilePath));
+                    if (note.getImageUrl() != null) {
+//                        ivContent.setImageURI(Uri.parse(imageFilePath));
+                        Glide.with(ivContent)
+                                .load(note.getImageUrl())
+                                .centerCrop()
+                                .into(ivContent);
                         ivContent.setVisibility(View.VISIBLE);
                     }
                 }
