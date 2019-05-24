@@ -13,7 +13,8 @@ public class Note {
     private String imageUrl;
     @SerializedName("is_favorite")
     private boolean isFavorite;
-//    private Date createdDate;
+    @SerializedName("created_date")
+    private Date createdDate;
 
     public int getId() {
         return id;
@@ -55,4 +56,11 @@ public class Note {
         isFavorite = favorite;
     }
 
+    public Date getCreatedDate() {
+        return createdDate;
+    }
+
+    public void setCreatedDate(Date createdDate) {
+        this.createdDate = createdDate;
+    }
 }

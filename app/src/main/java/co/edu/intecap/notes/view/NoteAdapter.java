@@ -5,6 +5,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.bumptech.glide.Glide;
+
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -43,18 +45,24 @@ class NoteAdapter extends RecyclerView.Adapter<NoteViewHolder> {
 
     @Override
     public void onBindViewHolder(@NonNull NoteViewHolder holder, int position) {
-           Note note = noteEntityList.get(position);
-           holder.noteId = note.getId();
-           holder.txtName.setText(note.getName());
-           holder.txtContent.setText(note.getContent());
-//           holder.txtDate.setText(simpleDateFormat.format(note.getCreatedDate()));
-           if(note.getImageUrl() != null && !note.getImageUrl().isEmpty()){
-//               holder.ivContent.setImageURI(Uri.parse(note.getImagePath()));
-               holder.ivContent.setVisibility(View.VISIBLE);
-           }else{
-               holder.ivContent.setImageBitmap(null);
-               holder.ivContent.setVisibility(View.GONE);
-           }
+        Note note = noteEntityList.get(position);
+        holder.noteId = note.getId();
+        holder.txtName.setText(note.getName());
+        holder.txtContent.setText(note.getContent());
+        if (note.getCreatedDate() != null) {
+            holder.txtDate.setText(simpleDateFormat.format(note.getCreatedDate()));
+        }
+        if (note.getImageUrl() != null && !note.getImageUrl().isEmpty()) {
+            Glide.with(holder.ivContent)
+                    .load(note.getImageUrl())
+                    .centerCrop()
+                    .placeholder(R.color.image_holder_color)
+                    .into(holder.ivContent);
+            holder.ivContent.setVisibility(View.VISIBLE);
+        } else {
+            holder.ivContent.setImageBitmap(null);
+            holder.ivContent.setVisibility(View.GONE);
+        }
     }
 
     @Override

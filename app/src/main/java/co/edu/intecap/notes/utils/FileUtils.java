@@ -1,8 +1,9 @@
 package co.edu.intecap.notes.utils;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Environment;
 import android.util.Log;
 
@@ -12,12 +13,9 @@ import java.io.IOException;
 
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.Date;
 
-import androidx.annotation.RequiresApi;
-import androidx.core.content.FileProvider;
+import androidx.annotation.NonNull;
 
 public class FileUtils {
 
@@ -71,6 +69,32 @@ public class FileUtils {
             count += n;
         }
         return count;
+    }
+
+
+    public static void compressImage(@NonNull String photoPath){
+        final BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inJustDecodeBounds = true;
+        options.inSampleSize = 10;
+        options.inJustDecodeBounds = false;
+        options.inTempStorage = new byte[16 * 1024];
+        options.inPreferredConfig = Bitmap.Config.ARGB_8888;
+        Bitmap bmp= BitmapFactory.decodeFile(photoPath, options);
+        FileOutputStream out = null;
+        try {
+            out = new FileOutputStream(photoPath);
+            bmp.compress(Bitmap.CompressFormat.PNG, 20, out);
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (out != null) {
+                    out.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
 }

@@ -8,6 +8,8 @@ import co.edu.intecap.notes.api.Note;
 import co.edu.intecap.notes.api.NoteResponse;
 import co.edu.intecap.notes.api.NotesApi;
 import co.edu.intecap.notes.api.NotesApiClient;
+import co.edu.intecap.notes.listeners.CompressionCallback;
+import co.edu.intecap.notes.utils.CompressImageTask;
 import co.edu.intecap.notes.utils.FileUtils;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
@@ -16,6 +18,8 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+import android.app.Dialog;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -119,87 +123,151 @@ public class NotesFormActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 if (noteId == EMPTY_NOTE) {
-                    final Note note = new Note();
-                    note.setName(inputName.getEditText().getText().toString());
-                    note.setContent(inputContent.getEditText().getText().toString());
-                    note.setFavorite(swFavorite.isChecked());
+                    createNote();
+                } else {
+                    updateNote();
+                }
+            }
+        });
+    }
 
-                    File file = new File(imageFilePath);
-                    Log.d("Note", "Filename " + file.getName());
-                    //RequestBody mFile = RequestBody.create(MediaType.parse("multipart/form-data"), file);
-                    RequestBody mFile = RequestBody.create(MediaType.parse("image/*"), file);
-                    MultipartBody.Part fileToUpload = MultipartBody.Part.createFormData("file", file.getName(), mFile);
-                    RequestBody filename = RequestBody.create(MediaType.parse("text/plain"), file.getName());
+    private void updateNote() {
+        notesApi.getNote(noteId).enqueue(new Callback<Note>() {
+            @Override
+            public void onResponse(Call<Note> call, Response<Note> response) {
 
-
-                    if(imageFilePath == null || imageFilePath.isEmpty()) return;
-
-                    notesApi.uploadFile(fileToUpload, filename).enqueue(new Callback<NoteResponse>() {
+                final Note note = response.body();
+                note.setName(inputName.getEditText().getText().toString());
+                note.setContent(inputContent.getEditText().getText().toString());
+                note.setFavorite(swFavorite.isChecked());
+                final ProgressDialog dialog = ProgressDialog.show(NotesFormActivity.this, "",
+                        "Loading. Please wait...", true);
+                if (imageFilePath != null) {
+                    FileUtils.compressImage(imageFilePath);
+                    uploadImage(imageFilePath, new Callback<NoteResponse>() {
                         @Override
                         public void onResponse(Call<NoteResponse> call, Response<NoteResponse> response) {
-                            Log.d("Note", "uploadFile: " + response.body().getStatus());
                             note.setImageUrl(response.body().getStatus());
-                            notesApi.addNote(note).enqueue(new Callback<Note>() {
-                                @Override
-                                public void onResponse(Call<Note> call, Response<Note> response) {
-                                    Log.d("Note", "onResponse: Note added");
-                                    finish();
-                                }
-
-                                @Override
-                                public void onFailure(Call<Note> call, Throwable t) {
-                                    finish();
-                                }
-                            });
+                            sendUpdateRequest(note, dialog);
                         }
 
                         @Override
                         public void onFailure(Call<NoteResponse> call, Throwable t) {
-                            Log.e("Note", "onFailure: " , t);
-                            finish();
+                            dialog.dismiss();
+                            Toast.makeText(NotesFormActivity.this, "Error uploading image", Toast.LENGTH_SHORT).show();
                         }
                     });
-
-
                 } else {
-                    notesApi.getNote(noteId).enqueue(new Callback<Note>() {
-                        @Override
-                        public void onResponse(Call<Note> call, Response<Note> response) {
-
-                            Note note = response.body();
-                            note.setName(inputName.getEditText().getText().toString());
-                            note.setContent(inputContent.getEditText().getText().toString());
-                            note.setFavorite(swFavorite.isChecked());
-                            note.setImageUrl(imageFilePath);
-                            notesApi.updateNote(note, noteId).enqueue(new Callback<Note>() {
-                                @Override
-                                public void onResponse(Call<Note> call, Response<Note> response) {
-                                    Log.d("Note", "onResponse: Note updated");
-                                }
-
-                                @Override
-                                public void onFailure(Call<Note> call, Throwable t) {
-
-                                }
-                            });
-                        }
-
-                        @Override
-                        public void onFailure(Call<Note> call, Throwable t) {
-
-                        }
-                    });
-
+                    sendUpdateRequest(note, dialog);
                 }
 
+
+            }
+
+            @Override
+            public void onFailure(Call<Note> call, Throwable t) {
 
             }
         });
     }
 
+    private void uploadImage(String imageFilePath, Callback<NoteResponse> callback) {
+        File file = new File(imageFilePath);
+        Log.d("Note", "Filename " + file.getName());
+        RequestBody mFile = RequestBody.create(MediaType.parse("image/*"), file);
+        MultipartBody.Part fileToUpload = MultipartBody.Part.createFormData("file", file.getName(), mFile);
+        RequestBody filename = RequestBody.create(MediaType.parse("text/plain"), file.getName());
+
+        notesApi.uploadFile(fileToUpload, filename).enqueue(callback);
+    }
+
+    private void sendUpdateRequest(Note note, final ProgressDialog dialog) {
+        notesApi.updateNote(note, noteId).enqueue(new Callback<Note>() {
+            @Override
+            public void onResponse(Call<Note> call, Response<Note> response) {
+                Log.d("Note", "onResponse: Note updated");
+                dialog.dismiss();
+                finish();
+            }
+
+            @Override
+            public void onFailure(Call<Note> call, Throwable t) {
+                dialog.dismiss();
+                Toast.makeText(NotesFormActivity.this, "Error updating note", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void createNote() {
+        final Note note = new Note();
+        note.setName(inputName.getEditText().getText().toString());
+        note.setContent(inputContent.getEditText().getText().toString());
+        note.setFavorite(swFavorite.isChecked());
+        note.setCreatedDate(new Date());
+
+
+        if (imageFilePath == null || imageFilePath.isEmpty()) {
+            Toast.makeText(NotesFormActivity.this, "Image is empty", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        final ProgressDialog dialog = ProgressDialog.show(NotesFormActivity.this, "",
+                "Loading. Please wait...", true);
+        CompressImageTask compressImageTask = new CompressImageTask();
+
+
+        compressImageTask.setCompressionCallback(new CompressionCallback() {
+            @Override
+            public void onImageCompressed() {
+                uploadImage(imageFilePath, new Callback<NoteResponse>() {
+                    @Override
+                    public void onResponse(Call<NoteResponse> call, Response<NoteResponse> response) {
+                        Log.d("Note", "uploadFile: " + response.body().getStatus());
+                        note.setImageUrl(response.body().getStatus());
+                        notesApi.addNote(note).enqueue(new Callback<Note>() {
+                            @Override
+                            public void onResponse(Call<Note> call, Response<Note> response) {
+                                Log.d("Note", "onResponse: Note added");
+                                if(dialog != null && dialog.isShowing()){
+                                    dialog.dismiss();
+                                }
+                                finish();
+                            }
+
+                            @Override
+                            public void onFailure(Call<Note> call, Throwable t) {
+                                Log.e("Note", "Add note onFailure: ", t);
+                                closeDialog(dialog);
+                                finish();
+                            }
+                        });
+                    }
+
+                    @Override
+                    public void onFailure(Call<NoteResponse> call, Throwable t) {
+                        Toast.makeText(NotesFormActivity.this, "Error uploading image", Toast.LENGTH_SHORT).show();
+                        Log.e("Note", "onFailure: ", t);
+                        closeDialog(dialog);
+                        finish();
+
+                    }
+
+                });
+            }
+        });
+
+        compressImageTask.execute(imageFilePath);
+
+    }
+
+
+    private  void closeDialog(Dialog dialog){
+        if(dialog != null && dialog.isShowing()){
+            dialog.dismiss();
+        }
+    }
+
     private void setupUI() {
-
-
         btnSave = findViewById(R.id.btn_save);
         ibAddImage = findViewById(R.id.ib_add_image);
         inputName = findViewById(R.id.input_name);
@@ -213,18 +281,18 @@ public class NotesFormActivity extends AppCompatActivity {
         notesApi.getNote(noteId).enqueue(new Callback<Note>() {
             @Override
             public void onResponse(Call<Note> call, Response<Note> response) {
-                 Note note = response.body();
+                Note note = response.body();
                 if (note != null) {
                     inputName.getEditText().setText(note.getName());
                     inputContent.getEditText().setText(note.getContent());
                     swFavorite.setChecked(note.isFavorite());
-                    Log.d("IMAGE", "image url: " + note.getImageUrl() );
+                    Log.d("IMAGE", "image url: " + note.getImageUrl());
 
                     if (note.getImageUrl() != null) {
-//                        ivContent.setImageURI(Uri.parse(imageFilePath));
                         Glide.with(ivContent)
                                 .load(note.getImageUrl())
                                 .centerCrop()
+                                .placeholder(R.color.image_holder_color)
                                 .into(ivContent);
                         ivContent.setVisibility(View.VISIBLE);
                     }
