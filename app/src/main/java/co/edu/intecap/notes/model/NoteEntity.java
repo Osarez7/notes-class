@@ -7,7 +7,7 @@ import androidx.room.Entity;
 import androidx.room.PrimaryKey;
 
 @Entity(tableName = "note")
-public class Note {
+public class NoteEntity {
 
     @PrimaryKey(autoGenerate = true)
     private long id;
@@ -15,6 +15,7 @@ public class Note {
     private String content;
     private boolean isFavorite;
     private Date createdDate;
+    private String imagePath;
 
     public long getId() {
         return id;
@@ -56,9 +57,11 @@ public class Note {
         this.createdDate = createdDate;
     }
 
+    public String getImagePath() {
+        return imagePath;
+    }
 
-
-
-
-
+    public void setImagePath(String imagePath) {
+        this.imagePath = imagePath;
+    }
 }

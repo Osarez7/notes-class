@@ -1,5 +1,6 @@
 package co.edu.intecap.notes.view;
 
+import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,26 +13,26 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import co.edu.intecap.notes.R;
 import co.edu.intecap.notes.listeners.NoteEventListener;
-import co.edu.intecap.notes.model.Note;
+import co.edu.intecap.notes.model.NoteEntity;
 
 public class NoteAdapter extends RecyclerView.Adapter<NoteViewHolder> {
 
-    List<Note> noteList = new ArrayList();
+    List<NoteEntity> noteList = new ArrayList();
 
     SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
     private NoteEventListener listener;
 
-    public NoteAdapter(List<Note> noteList,@NonNull NoteEventListener listener) {
+    public NoteAdapter(List<NoteEntity> noteList, @NonNull NoteEventListener listener) {
         this.noteList = noteList;
         this.listener = listener;
     }
 
 
-    public List<Note> getNoteList() {
+    public List<NoteEntity> getNoteList() {
         return noteList;
     }
 
-    public void setNoteList(List<Note> noteList) {
+    public void setNoteList(List<NoteEntity> noteList) {
         this.noteList = noteList;
     }
 
@@ -44,11 +45,14 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteViewHolder> {
 
     @Override
     public void onBindViewHolder(@NonNull NoteViewHolder holder, int position) {
-           Note note = noteList.get(position);
+           NoteEntity note = noteList.get(position);
            holder.noteId = note.getId();
            holder.txtName.setText(note.getName());
            holder.txtContent.setText(note.getContent());
            holder.txtDate.setText(simpleDateFormat.format(note.getCreatedDate()));
+           if(note.getImagePath() != null){
+               holder.ivContent.setImageURI(Uri.parse(note.getImagePath()));
+           }
     }
 
     @Override

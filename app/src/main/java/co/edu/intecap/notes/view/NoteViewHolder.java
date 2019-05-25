@@ -1,6 +1,7 @@
 package co.edu.intecap.notes.view;
 
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -13,6 +14,7 @@ class NoteViewHolder extends RecyclerView.ViewHolder {
     TextView txtName;
     TextView txtContent;
     TextView txtDate;
+    ImageView ivContent;
     long noteId;
 
     public NoteViewHolder(@NonNull View itemView,@NonNull final NoteEventListener listener) {
@@ -23,6 +25,7 @@ class NoteViewHolder extends RecyclerView.ViewHolder {
         txtName = itemView.findViewById(R.id.txt_name);
         txtContent = itemView.findViewById(R.id.txt_content);
         txtDate = itemView.findViewById(R.id.txt_date);
+        ivContent = itemView.findViewById(R.id.iv_content);
 
         itemView.setOnClickListener(new View.OnClickListener() {
             @Override

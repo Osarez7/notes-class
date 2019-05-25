@@ -7,23 +7,23 @@ import androidx.room.Delete;
 import androidx.room.Insert;
 import androidx.room.Query;
 import androidx.room.Update;
-import co.edu.intecap.notes.model.Note;
+import co.edu.intecap.notes.model.NoteEntity;
 
 @Dao
 public interface NoteDao {
     //CRUD (Create, Retrieve, Update, Delete)
     @Insert
-    public void insertNote(Note note);
+    public void insertNote(NoteEntity note);
 
     @Query("SELECT * FROM note")
-    public List<Note> findAllNotes();
+    public List<NoteEntity> findAllNotes();
 
     @Query("SELECT * FROM note WHERE id=:id")
-    public Note findNote(long id);
+    public NoteEntity findNote(long id);
 
     @Update
-    public void updateNote(Note note);
+    public void updateNote(NoteEntity note);
 
     @Delete
-    public void deleteNote(Note note);
+    public void deleteNote(NoteEntity note);
 }

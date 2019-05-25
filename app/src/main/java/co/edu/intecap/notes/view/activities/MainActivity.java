@@ -6,7 +6,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import co.edu.intecap.notes.R;
 import co.edu.intecap.notes.listeners.NoteEventListener;
-import co.edu.intecap.notes.model.Note;
+import co.edu.intecap.notes.model.NoteEntity;
 import co.edu.intecap.notes.model.database.NotesDatabase;
 import co.edu.intecap.notes.view.NoteAdapter;
 
@@ -38,7 +38,7 @@ public class MainActivity extends AppCompatActivity implements NoteEventListener
         notesDatabase = NotesDatabase.getInstance(this);
 
         rvNotes.setLayoutManager(new LinearLayoutManager(this));
-        adapter = new NoteAdapter(new ArrayList<Note>(), this);
+        adapter = new NoteAdapter(new ArrayList<NoteEntity>(), this);
         rvNotes.setAdapter(adapter);
 
         fabAddNote = findViewById(R.id.fab_add_note);
